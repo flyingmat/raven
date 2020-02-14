@@ -13,7 +13,7 @@ def init_driver():
 
     driver = Firefox(ffprofile)
     # can be increased in case of slow internet speeds and/or poor cpu performance
-    driver.implicitly_wait(5)
+    driver.implicitly_wait(2)
     driver.set_window_size(1000,1000)
 
     return driver

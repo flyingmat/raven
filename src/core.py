@@ -2,25 +2,37 @@ from selenium.webdriver import Firefox, FirefoxProfile
 
 # the Tweet class holds tweet information
 class Tweet:
-    def __init__(self, text, media = []):
+    def __init__(self, text, media_urls = []):
         self.text = text
+        self.media_urls = media_urls
 
 # return a tweet's text given its webelement
 def tweet_text(tweet_element):
     return tweet_element.find_element_by_xpath(".//p[contains(@class, 'tweet-text')]").text
 
+def tweet_media_urls(tweet_element):
+    try:
+        media_container = tweet_element.find_element_by_xpath(".//div[@class='AdaptiveMediaOuterContainer']")
+        media_elements = media_container.find_elements_by_xpath(".//*[@src]")
+        media_urls = [e.get_attribute('src')+':orig' for e in media_elements]
+        return media_urls
+    except:
+        return []
+
 # tweet scraper, implemented as generator
 def profile_tweet_scrape(driver):
+    driver.implicitly_wait(2)
     tweet_list = driver.find_element_by_xpath("//div[@id='timeline']")
     tweet = tweet_list.find_element_by_xpath(".//li[contains(@id, 'stream-item-tweet')]")
 
-    yield Tweet(tweet_text(tweet))
+    driver.implicitly_wait(0)
+    yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
 
     try:
         while True:
             driver.execute_script('arguments[0].scrollIntoView(true)', tweet)
             tweet = tweet.find_element_by_xpath("./following-sibling::li")
-            yield Tweet(tweet_text(tweet))
+            yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
     except:
         raise StopIteration
 
@@ -31,5 +43,6 @@ def profile_dump(driver, profile_url):
     try:
         for tweet in profile_tweet_scrape(driver):
             print(tweet.text)
+            print(tweet.media_urls)
     except StopIteration:
         pass
