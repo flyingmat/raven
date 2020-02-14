@@ -79,10 +79,13 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
             if download_media:
                 for media_url in tweet.media_urls:
                     download_queue.put(media_url)
+            else:
+                print(tweet.text)
     except:
         raise
     finally:
         print('(!) Core halting...')
-        download_queue.join()
-        download_queue.put(None)
-        download_thread.join()
+        if download_media:
+            download_queue.join()
+            download_queue.put(None)
+            download_thread.join()
