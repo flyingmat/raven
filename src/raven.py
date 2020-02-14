@@ -12,8 +12,7 @@ def init_driver():
     ffprofile.set_preference('general.useragent.override', 'Mozilla/5.0 (Windows NT 9.0; WOW64; Trident/7.0; rv:11.0) like Gecko')
 
     driver = Firefox(ffprofile)
-    # can be increased in case of slow internet speeds and/or poor cpu performance
-    driver.implicitly_wait(2)
+    driver.implicitly_wait(IMPLICIT_WAIT)
     driver.set_window_size(1000,1000)
 
     return driver

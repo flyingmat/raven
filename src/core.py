@@ -1,5 +1,8 @@
 from selenium.webdriver import Firefox, FirefoxProfile
 
+# can be increased in case of slow internet speeds and/or poor cpu performance
+IMPLICIT_WAIT = 2
+
 # the Tweet class holds tweet information
 class Tweet:
     def __init__(self, text, media_urls = []):
@@ -21,11 +24,11 @@ def tweet_media_urls(tweet_element):
 
 # tweet scraper, implemented as generator
 def profile_tweet_scrape(driver):
-    driver.implicitly_wait(2)
+    driver.implicitly_wait(IMPLICIT_WAIT)
     tweet_list = driver.find_element_by_xpath("//div[@id='timeline']")
     tweet = tweet_list.find_element_by_xpath(".//li[contains(@id, 'stream-item-tweet')]")
 
-    driver.implicitly_wait(0)
+    driver.implicitly_wait(IMPLICIT_WAIT/4)
     yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
 
     try:
