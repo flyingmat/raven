@@ -37,7 +37,7 @@ def profile_tweet_scrape(driver):
             tweet = tweet.find_element_by_xpath("./following-sibling::li")
             yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
     except:
-        raise StopIteration
+        return
 
 # profile dumping function, prints all of a user's tweets
 def profile_dump(driver, profile_url):
@@ -46,6 +46,5 @@ def profile_dump(driver, profile_url):
     try:
         for tweet in profile_tweet_scrape(driver):
             print(tweet.text)
-            print(tweet.media_urls)
-    except StopIteration:
-        pass
+    except:
+        raise
