@@ -10,7 +10,7 @@ class Tweet:
         self.text = text
         self.media_urls = media_urls
 
-class MediaDowloadThread(threading.Thread):
+class MediaDownloadThread(threading.Thread):
     def __init__(self, queue, overwrite=False):
         threading.Thread.__init__(self)
         self.queue = queue
@@ -72,14 +72,14 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
 
     if download_media:
         download_queue = queue.Queue()
-        download_thread = MediaDowloadThread(download_queue, overwrite=overwrite_media)
+        download_thread = MediaDownloadThread(download_queue, overwrite=overwrite_media)
         download_thread.start()
     try:
         for tweet in profile_tweet_scrape(driver):
             if download_media:
                 for media_url in tweet.media_urls:
                     download_queue.put(media_url)
-    except Exception as e:
+    except:
         raise
     finally:
         print('(!) Core halting...')

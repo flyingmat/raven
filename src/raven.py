@@ -1,5 +1,5 @@
 from core import *
-import argparse
+import argparse, traceback
 
 # cli argument parser
 parser = argparse.ArgumentParser(description='Raven is a Twitter scraping utility written in python.')
@@ -24,7 +24,7 @@ def main():
     try:
         profile_dump(driver, args.profile)
     except Exception as e:
-        print(e)
+        print('(!) Unexpected error! {}'.format(e))
     finally:
         driver.quit()
 
