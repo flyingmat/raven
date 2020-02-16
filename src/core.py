@@ -18,7 +18,7 @@ class MediaTweet(Tweet):
     def __init__(self, user, text, date, time, media):
         super().__init__(user, text, date, time)
         self.media = media
-    def download_media(self, overwrite=False):
+    def download_media(self, overwrite=False, verbose=True):
         for url, filename in self.media.items():
             media_path = '{}/{}'.format(self.user, filename)
             if not os.path.exists(media_path) or overwrite:
@@ -35,7 +35,7 @@ class MediaTweet(Tweet):
                 '"{}"'.format(','.join(self.media.keys()))
 
 class MediaDownloadThread(threading.Thread):
-    def __init__(self, queue, overwrite=False):
+    def __init__(self, queue, overwrite=False, verbose=False):
         threading.Thread.__init__(self)
         self.queue = queue
         self.overwrite = overwrite
@@ -43,7 +43,7 @@ class MediaDownloadThread(threading.Thread):
     def run(self):
         while True:
             if media_tweet := self.queue.get():
-                media_tweet.download_media(self.overwrite)
+                media_tweet.download_media(self.overwrite, self.verbose)
             else:
                 break
             self.queue.task_done()
@@ -93,12 +93,12 @@ def profile_tweet_elements(driver):
         return
 
 # profile dumping function, prints all of a user's tweets
-def profile_dump(driver, profile_url, download_media=True, overwrite_media=False):
+def profile_dump(driver, profile_url, download_media=True, overwrite_media=False, verbose=False):
     driver.get(profile_url)
 
     if download_media:
         download_queue = queue.Queue()
-        download_thread = MediaDownloadThread(download_queue, overwrite=overwrite_media)
+        download_thread = MediaDownloadThread(download_queue, overwrite=overwrite_media, verbose=verbose)
         download_thread.start()
     try:
         for tweet_element in profile_tweet_elements(driver):
