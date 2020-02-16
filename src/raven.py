@@ -1,4 +1,5 @@
 from raven_core import *
+from raven_analysis import *
 import argparse, traceback
 
 # cli argument parser
@@ -25,7 +26,8 @@ def main():
 
     driver = init_driver()
     try:
-        profile_dump(driver, args.profile, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
+        tweets = profile_dump(driver, args.profile, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
+        n_media_analysis(tweets)
     except Exception as e:
         #print('(!) Unexpected error! {}'.format(e))
         traceback.print_exc()

@@ -95,6 +95,7 @@ def profile_tweet_elements(driver):
 # profile dumping function, prints all of a user's tweets
 def profile_dump(driver, profile_url, download_media=True, overwrite_media=False, verbose=False):
     driver.get(profile_url)
+    tweets = []
 
     if download_media:
         download_queue = queue.Queue()
@@ -110,8 +111,11 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
             if verbose: print(tweet)
+            tweets.append(tweet)
     except:
         raise
+    else:
+        return tweets
     finally:
         print('(!) Core halting...')
         if download_media:
