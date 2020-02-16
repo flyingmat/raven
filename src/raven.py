@@ -26,7 +26,8 @@ def main():
     try:
         profile_dump(driver, args.profile, download_media=args.download_media, overwrite_media=args.overwrite)
     except Exception as e:
-        print('(!) Unexpected error! {}'.format(e))
+        #print('(!) Unexpected error! {}'.format(e))
+        traceback.print_exc()
     finally:
         driver.quit()
 

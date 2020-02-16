@@ -2,16 +2,37 @@ from selenium.webdriver import Firefox, FirefoxProfile
 import threading, queue, os, urllib.request
 
 # can be increased in case of slow internet speeds and/or poor cpu performance
-IMPLICIT_WAIT = 0.5
+IMPLICIT_WAIT = 2
 
 # the Tweet class holds tweet information
 class Tweet:
-    def __init__(self, user, text, date, time, media_urls = []):
+    def __init__(self, user, text, date, time):
         self.user = user
         self.text = text
         self.date = date
         self.time = time
-        self.media_urls = media_urls
+    def __str__(self):
+        return ','.join((self.user, '"{}"'.format(self.text), self.date, self.time))
+
+class MediaTweet(Tweet):
+    def __init__(self, user, text, date, time, media):
+        super().__init__(user, text, date, time)
+        self.media = media
+    def download_media(self, overwrite=False):
+        for url, filename in self.media.items():
+            media_path = '{}/{}'.format(self.user, filename)
+            if not os.path.exists(media_path) or overwrite:
+                print('    - Downloading {}...'.format(media_path))
+                with urllib.request.urlopen(url, timeout=5) as media_request:
+                    media_data = media_request.read()
+                with open(media_path, 'wb') as media_file:
+                    media_file.write(media_data)
+            elif not overwrite:
+                print('    - File {} already exists!'.format(media_path))
+    def __str__(self):
+        return super().__str__() + ',' + \
+                '"{}"'.format(','.join(self.media.values())) + ',' + \
+                '"{}"'.format(','.join(self.media.keys()))
 
 class MediaDownloadThread(threading.Thread):
     def __init__(self, queue, overwrite=False):
@@ -21,15 +42,15 @@ class MediaDownloadThread(threading.Thread):
 
     def run(self):
         while True:
-            if media_url := self.queue.get():
-                download_media(media_url, self.overwrite)
+            if media_tweet := self.queue.get():
+                media_tweet.download_media(self.overwrite)
             else:
                 break
             self.queue.task_done()
 
 # return a tweet's user given its webelement
 def tweet_user(tweet_element):
-    return tweet_element.find_element_by_xpath(".//span[contains(@class, 'username')]").text
+    return tweet_element.find_element_by_xpath(".//span[contains(@class, 'username')]").text[1:]
 
 # return a tweet's text given its webelement
 def tweet_text(tweet_element):
@@ -46,25 +67,14 @@ def tweet_info(tweet_element):
     return (tweet_user(tweet_element), tweet_text(tweet_element), *tweet_datetime(tweet_element))
 
 # return a list of a tweet's image urls
-def tweet_media_urls(tweet_element):
+def tweet_media(tweet_element):
     try:
         media_container = tweet_element.find_element_by_xpath(".//div[@class='AdaptiveMediaOuterContainer']")
-        media_elements = media_container.find_elements_by_xpath(".//*[@src]")
-        media_urls = [e.get_attribute('src')+':orig' for e in media_elements]
-        return media_urls
+        media_elements = media_container.find_elements_by_xpath(".//img[@src]")
+        media = {e.get_attribute('src')+':orig':e.get_attribute('src').split('/')[-1] for e in media_elements}
+        return media
     except:
-        return []
-
-def download_media(media_url, overwrite=False):
-    filename = media_url.split('/')[-1].split(':')[0]
-    if not os.path.exists(filename) or overwrite:
-        print('    - Downloading {}...'.format(filename))
-        with urllib.request.urlopen(media_url, timeout=5) as media:
-            media_data = media.read()
-        with open(filename, 'wb') as media_file:
-            media_file.write(media_data)
-    elif not overwrite:
-        print('    - File {} already exists!'.format(filename))
+        return {}
 
 # tweet scraper, implemented as generator
 def profile_tweet_elements(driver):
@@ -75,6 +85,7 @@ def profile_tweet_elements(driver):
 
     try:
         while True:
+            driver.implicitly_wait(IMPLICIT_WAIT)
             driver.execute_script('arguments[0].scrollIntoView(true)', tweet_element)
             tweet_element = tweet_element.find_element_by_xpath("./following-sibling::li")
             yield tweet_element
@@ -91,12 +102,14 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
         download_thread.start()
     try:
         for tweet_element in profile_tweet_elements(driver):
-            tweet = Tweet(*tweet_info(tweet_element))
-            if download_media:
-                for media_url in tweet.media_urls:
-                    download_queue.put(media_url)
+            driver.implicitly_wait(IMPLICIT_WAIT/40)
+            if media := tweet_media(tweet_element):
+                tweet = MediaTweet(*tweet_info(tweet_element), media)
+                if download_media:
+                    download_queue.put(tweet)
             else:
-                print('{} {} - {}: {}'.format(tweet.date, tweet.time, tweet.user, tweet.text))
+                tweet = Tweet(*tweet_info(tweet_element))
+            print(tweet)
     except:
         raise
     finally:
