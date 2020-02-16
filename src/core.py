@@ -31,7 +31,7 @@ class MediaTweet(Tweet):
                 print('    - File {} already exists!'.format(media_path))
     def __str__(self):
         return super().__str__() + ',' + \
-                '"{}"'.format(','.join(self.media.values())) + \
+                '"{}"'.format(','.join(self.media.values())) + ',' + \
                 '"{}"'.format(','.join(self.media.keys()))
 
 class MediaDownloadThread(threading.Thread):
