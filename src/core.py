@@ -6,8 +6,11 @@ IMPLICIT_WAIT = 0.5
 
 # the Tweet class holds tweet information
 class Tweet:
-    def __init__(self, text, media_urls = []):
+    def __init__(self, user, text, date, time, media_urls = []):
+        self.user = user
         self.text = text
+        self.date = date
+        self.time = time
         self.media_urls = media_urls
 
 class MediaDownloadThread(threading.Thread):
@@ -24,9 +27,23 @@ class MediaDownloadThread(threading.Thread):
                 break
             self.queue.task_done()
 
+# return a tweet's user given its webelement
+def tweet_user(tweet_element):
+    return tweet_element.find_element_by_xpath(".//span[contains(@class, 'username')]").text
+
 # return a tweet's text given its webelement
 def tweet_text(tweet_element):
     return tweet_element.find_element_by_xpath(".//p[contains(@class, 'tweet-text')]").text
+
+# return a tweet's date and time of posting given its webelement
+def tweet_datetime(tweet_element):
+    return tweet_element.find_element_by_xpath(".//a[contains(@class, 'tweet-timestamp')]")\
+            .get_attribute('title')\
+            .split(' - ')[::-1]
+
+# return info about a tweet given its webelement
+def tweet_info(tweet_element):
+    return (tweet_user(tweet_element), tweet_text(tweet_element), *tweet_datetime(tweet_element))
 
 # return a list of a tweet's image urls
 def tweet_media_urls(tweet_element):
@@ -50,19 +67,17 @@ def download_media(media_url, overwrite=False):
         print('    - File {} already exists!'.format(filename))
 
 # tweet scraper, implemented as generator
-def profile_tweet_scrape(driver):
-    driver.implicitly_wait(IMPLICIT_WAIT)
+def profile_tweet_elements(driver):
     tweet_list = driver.find_element_by_xpath("//div[@id='timeline']")
-    tweet = tweet_list.find_element_by_xpath(".//li[contains(@id, 'stream-item-tweet')]")
+    tweet_element = tweet_list.find_element_by_xpath(".//li[contains(@id, 'stream-item-tweet')]")
 
-    driver.implicitly_wait(IMPLICIT_WAIT/4)
-    yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
+    yield tweet_element
 
     try:
         while True:
-            driver.execute_script('arguments[0].scrollIntoView(true)', tweet)
-            tweet = tweet.find_element_by_xpath("./following-sibling::li")
-            yield Tweet(tweet_text(tweet), tweet_media_urls(tweet))
+            driver.execute_script('arguments[0].scrollIntoView(true)', tweet_element)
+            tweet_element = tweet_element.find_element_by_xpath("./following-sibling::li")
+            yield tweet_element
     except:
         return
 
@@ -75,12 +90,13 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
         download_thread = MediaDownloadThread(download_queue, overwrite=overwrite_media)
         download_thread.start()
     try:
-        for tweet in profile_tweet_scrape(driver):
+        for tweet_element in profile_tweet_elements(driver):
+            tweet = Tweet(*tweet_info(tweet_element))
             if download_media:
                 for media_url in tweet.media_urls:
                     download_queue.put(media_url)
             else:
-                print(tweet.text)
+                print('{} {} - {}: {}'.format(tweet.date, tweet.time, tweet.user, tweet.text))
     except:
         raise
     finally:
