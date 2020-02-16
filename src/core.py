@@ -12,7 +12,7 @@ class Tweet:
         self.date = date
         self.time = time
     def __str__(self):
-        return '{} {} - {}: {}'.format(self.date, self.time, self.user, self.text)
+        return ','.join((self.user, '"{}"'.format(self.text), self.date, self.time))
 
 class MediaTweet(Tweet):
     def __init__(self, user, text, date, time, media):
@@ -29,6 +29,10 @@ class MediaTweet(Tweet):
                     media_file.write(media_data)
             elif not overwrite:
                 print('    - File {} already exists!'.format(media_path))
+    def __str__(self):
+        return super().__str__() + ',' + \
+                '"{}"'.format(','.join(self.media.values())) + \
+                '"{}"'.format(','.join(self.media.keys()))
 
 class MediaDownloadThread(threading.Thread):
     def __init__(self, queue, overwrite=False):
@@ -105,7 +109,7 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
                     download_queue.put(tweet)
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
-                #print(tweet)
+            print(tweet)
     except:
         raise
     finally:
