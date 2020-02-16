@@ -22,13 +22,13 @@ class MediaTweet(Tweet):
         for url, filename in self.media.items():
             media_path = '{}/{}'.format(self.user, filename)
             if not os.path.exists(media_path) or overwrite:
-                print('    - Downloading {}...'.format(media_path))
+                if verbose: print('    - Downloading {}...'.format(media_path))
                 with urllib.request.urlopen(url, timeout=5) as media_request:
                     media_data = media_request.read()
                 with open(media_path, 'wb') as media_file:
                     media_file.write(media_data)
             elif not overwrite:
-                print('    - File {} already exists!'.format(media_path))
+                if verbose: print('    - File {} already exists!'.format(media_path))
     def __str__(self):
         return super().__str__() + ',' + \
                 '"{}"'.format(','.join(self.media.values())) + ',' + \
@@ -109,7 +109,7 @@ def profile_dump(driver, profile_url, download_media=True, overwrite_media=False
                     download_queue.put(tweet)
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
-            print(tweet)
+            if verbose: print(tweet)
     except:
         raise
     finally:

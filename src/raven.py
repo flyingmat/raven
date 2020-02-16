@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser(description='Raven is a Twitter scraping utilit
 parser.add_argument('profile', metavar='PROFILE', help='Profile URL')
 parser.add_argument('-d', '--download-media', dest='download_media', action='store_const', const=True, default=False, help='download the user''s media')
 parser.add_argument('--overwrite', dest='overwrite', action='store_const', const=True, default=False, help='overwrite files when downloading media')
+parser.add_argument('--verbose', dest='verbose', action='store_const', const=True, default=False, help='verbose execution')
 
 # creates a properly setup webdriver instance
 def init_driver():
@@ -24,7 +25,7 @@ def main():
 
     driver = init_driver()
     try:
-        profile_dump(driver, args.profile, download_media=args.download_media, overwrite_media=args.overwrite)
+        profile_dump(driver, args.profile, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
     except Exception as e:
         #print('(!) Unexpected error! {}'.format(e))
         traceback.print_exc()
