@@ -1,4 +1,4 @@
-from core import *
+from raven_core import *
 import argparse, traceback
 
 # cli argument parser
