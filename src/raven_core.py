@@ -5,22 +5,22 @@ IMPLICIT_WAIT = 2
 
 # the Tweet class holds tweet information
 class Tweet:
-    def __init__(self, user, text, date, time):
+    def __init__(self, user, text, date, time, media={}):
         self.user = user
         self.text = text
         self.date = date
         self.time = time
-    def __str__(self):
-        return ','.join((self.user, '"{}"'.format(self.text), self.date, self.time))
-
-class MediaTweet(Tweet):
-    def __init__(self, user, text, date, time, media):
-        super().__init__(user, text, date, time)
         self.media = media
+
+    def __str__(self):
+        return '{}: {}'.format(self.user, self.text.replace('\n', ' '))
+
     def download_media(self, overwrite=False, verbose=True):
         for url, filename in self.media.items():
             media_path = '{}/{}'.format(self.user, filename)
-            if not os.path.exists(media_path) or overwrite:
+            if not os.path.isdir(self.user):
+                os.mkdir(self.user)
+            if not os.path.isfile(media_path) or overwrite:
                 if verbose: print('    - Downloading {}...'.format(media_path))
                 with urllib.request.urlopen(url, timeout=5) as media_request:
                     media_data = media_request.read()
@@ -28,16 +28,23 @@ class MediaTweet(Tweet):
                     media_file.write(media_data)
             elif not overwrite:
                 if verbose: print('    - File {} already exists!'.format(media_path))
-    def __str__(self):
-        return super().__str__() + ',' + \
-                '"{}"'.format(','.join(self.media.values())) + ',' + \
-                '"{}"'.format(','.join(self.media.keys()))
+
+    def as_csv(self):
+        return ','.join((\
+                self.user,
+                '"{}"'.format(self.text.replace('\n', ' ')),
+                self.date,
+                self.time,
+                '"{}"'.format(','.join(self.media.values())),
+                '"{}"'.format(','.join(self.media.keys())),
+                ))
 
 class MediaDownloadThread(threading.Thread):
     def __init__(self, queue, overwrite=False, verbose=False):
         threading.Thread.__init__(self)
         self.queue = queue
         self.overwrite = overwrite
+        self.verbose = verbose
 
     def run(self):
         while True:
@@ -106,12 +113,12 @@ def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=F
                 break
             driver.implicitly_wait(IMPLICIT_WAIT/40)
             if media := tweet_media(tweet_element):
-                tweet = MediaTweet(*tweet_info(tweet_element), media)
+                tweet = Tweet(*tweet_info(tweet_element), media)
                 if download_media:
                     download_queue.put(tweet)
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
-            if verbose: print(tweet)
+            if verbose: print(tweet.as_csv())
             tweet_i += 1
     except:
         raise
