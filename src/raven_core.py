@@ -118,13 +118,15 @@ def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=F
                     download_queue.put(tweet)
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
-            if verbose: print(tweet.as_csv())
+            print(tweet)
             tweet_i += 1
     except:
         raise
     finally:
         print('(!) Core halting...')
         if download_media:
+            if not verbose:
+                print('(!) Media is being downloaded...')
             download_queue.join()
             download_queue.put(None)
             download_thread.join()
