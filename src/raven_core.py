@@ -18,7 +18,9 @@ class Tweet:
     def download_media(self, overwrite=False, verbose=True):
         for url, filename in self.media.items():
             media_path = '{}/{}'.format(self.user, filename)
-            if not os.path.exists(media_path) or overwrite:
+            if not os.path.isdir(self.user):
+                os.mkdir(self.user)
+            if not os.path.isfile(media_path) or overwrite:
                 if verbose: print('    - Downloading {}...'.format(media_path))
                 with urllib.request.urlopen(url, timeout=5) as media_request:
                     media_data = media_request.read()
@@ -42,6 +44,7 @@ class MediaDownloadThread(threading.Thread):
         threading.Thread.__init__(self)
         self.queue = queue
         self.overwrite = overwrite
+        self.verbose = verbose
 
     def run(self):
         while True:
