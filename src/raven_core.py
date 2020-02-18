@@ -109,7 +109,7 @@ def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=F
         download_thread.start()
     try:
         for tweet_element in stream_tweet_elements(driver):
-            if n > -1 and tweet_i == n:
+            if n > -1 and len(tweets) == n:
                 break
             driver.implicitly_wait(IMPLICIT_WAIT/40)
             if media := tweet_media(tweet_element):
