@@ -77,7 +77,7 @@ def tweet_media(tweet_element):
         return {}
 
 # tweet scraper, implemented as generator
-def profile_tweet_elements(driver):
+def stream_tweet_elements(driver):
     tweet_list = driver.find_element_by_xpath("//div[@id='timeline']")
     tweet_element = tweet_list.find_element_by_xpath(".//li[contains(@id, 'stream-item-tweet')]")
 
@@ -92,16 +92,16 @@ def profile_tweet_elements(driver):
     except:
         return
 
-# profile dumping function, prints all of a user's tweets
-def profile_dump(driver, profile_url, download_media=True, overwrite_media=False, verbose=False):
-    driver.get(profile_url)
+# tweet stream dumping function
+def tweet_stream_dump(driver, url, download_media=False, overwrite_media=False, verbose=False):
+    driver.get(url)
 
     if download_media:
         download_queue = queue.Queue()
         download_thread = MediaDownloadThread(download_queue, overwrite=overwrite_media, verbose=verbose)
         download_thread.start()
     try:
-        for tweet_element in profile_tweet_elements(driver):
+        for tweet_element in stream_tweet_elements(driver):
             driver.implicitly_wait(IMPLICIT_WAIT/40)
             if media := tweet_media(tweet_element):
                 tweet = MediaTweet(*tweet_info(tweet_element), media)
