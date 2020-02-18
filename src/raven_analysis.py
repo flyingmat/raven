@@ -1,9 +1,10 @@
 from raven_core import *
+import re
 
 def n_media_analysis(tweets):
     media_stats = {}
     for tweet in tweets:
-        if type(tweet) == MediaTweet:
+        if tweet.media:
             media_stats[len(tweet.media)] = 1 if len(tweet.media) not in \
                     media_stats else media_stats[len(tweet.media)] + 1
     print('Tweets with images: {}%'.format(round(sum(media_stats.values())*100/len(tweets))))
