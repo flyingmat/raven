@@ -1,4 +1,3 @@
-from selenium.webdriver import Firefox, FirefoxProfile
 import threading, queue, os, urllib.request
 
 # can be increased in case of slow internet speeds and/or poor cpu performance
@@ -93,8 +92,9 @@ def stream_tweet_elements(driver):
         return
 
 # tweet stream dumping function
-def tweet_stream_dump(driver, url, download_media=False, overwrite_media=False, verbose=False):
+def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=False, verbose=False):
     driver.get(url)
+    tweet_i = 0
 
     if download_media:
         download_queue = queue.Queue()
@@ -102,6 +102,8 @@ def tweet_stream_dump(driver, url, download_media=False, overwrite_media=False, 
         download_thread.start()
     try:
         for tweet_element in stream_tweet_elements(driver):
+            if n > -1 and tweet_i == n:
+                break
             driver.implicitly_wait(IMPLICIT_WAIT/40)
             if media := tweet_media(tweet_element):
                 tweet = MediaTweet(*tweet_info(tweet_element), media)
@@ -110,6 +112,7 @@ def tweet_stream_dump(driver, url, download_media=False, overwrite_media=False, 
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
             if verbose: print(tweet)
+            tweet_i += 1
     except:
         raise
     finally:

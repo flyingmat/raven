@@ -7,6 +7,7 @@ import argparse, traceback
 parser = argparse.ArgumentParser(description='Raven is a Twitter scraping utility written in python.')
 parser.add_argument('target_type', choices=['profile', 'query', 'url'])
 parser.add_argument('target', metavar='TARGET', help='target to be scraped')
+parser.add_argument('-n', dest='tweet_amount', type=int, help='maximum amount of tweets')
 parser.add_argument('-d', '--download-media', dest='download_media', action='store_const', const=True, default=False, help='download the user''s media')
 parser.add_argument('-v', '--verbose', dest='verbose', action='store_const', const=True, default=False, help='verbose execution')
 parser.add_argument('--overwrite', dest='overwrite', action='store_const', const=True, default=False, help='overwrite files when downloading media')
@@ -38,7 +39,7 @@ def main():
             target_url = 'https://www.twitter.com/search?q={}'.format(urllib.parse.quote(args.target))
         elif args.target_type == 'url':
             target_url = args.target
-        tweet_stream_dump(driver, target_url, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
+        tweet_stream_dump(driver, target_url, n=args.tweet_amount, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
     except Exception as e:
         #print('(!) Unexpected error! {}'.format(e))
         traceback.print_exc()
