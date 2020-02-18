@@ -87,7 +87,7 @@ def profile_tweet_elements(driver):
         while True:
             driver.implicitly_wait(IMPLICIT_WAIT)
             driver.execute_script('arguments[0].scrollIntoView(true)', tweet_element)
-            tweet_element = tweet_element.find_element_by_xpath("./following-sibling::li")
+            tweet_element = tweet_element.find_element_by_xpath("./following-sibling::li[contains(@id, 'stream-item-tweet')]")
             yield tweet_element
     except:
         return
