@@ -41,7 +41,7 @@ def main():
         elif args.target_type == 'url':
             target_url = args.target
         tweets = tweet_stream_dump(driver, target_url, n=args.tweet_amount, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
-        
+        hashtag_analysis(tweets)
     except Exception as e:
         #print('(!) Unexpected error! {}'.format(e))
         traceback.print_exc()
