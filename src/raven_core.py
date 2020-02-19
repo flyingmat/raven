@@ -101,7 +101,7 @@ def stream_tweet_elements(driver):
 # tweet stream dumping function
 def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=False, verbose=False):
     driver.get(url)
-    tweet_i = 0
+    tweets = []
 
     if download_media:
         download_queue = queue.Queue()
@@ -109,7 +109,7 @@ def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=F
         download_thread.start()
     try:
         for tweet_element in stream_tweet_elements(driver):
-            if n > -1 and tweet_i == n:
+            if n > -1 and len(tweets) == n:
                 break
             driver.implicitly_wait(IMPLICIT_WAIT/40)
             if media := tweet_media(tweet_element):
@@ -119,9 +119,11 @@ def tweet_stream_dump(driver, url, n=-1, download_media=False, overwrite_media=F
             else:
                 tweet = Tweet(*tweet_info(tweet_element))
             print(tweet)
-            tweet_i += 1
+            tweets.append(tweet)
     except:
         raise
+    else:
+        return tweets
     finally:
         print('(!) Core halting...')
         if download_media:

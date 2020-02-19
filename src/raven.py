@@ -1,6 +1,7 @@
 from selenium.webdriver import Firefox, FirefoxProfile
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from raven_core import *
+from raven_analysis import *
 import argparse, traceback
 
 # cli argument parser
@@ -39,7 +40,8 @@ def main():
             target_url = 'https://www.twitter.com/search?q={}'.format(urllib.parse.quote(args.target))
         elif args.target_type == 'url':
             target_url = args.target
-        tweet_stream_dump(driver, target_url, n=args.tweet_amount, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
+        tweets = tweet_stream_dump(driver, target_url, n=args.tweet_amount, download_media=args.download_media, overwrite_media=args.overwrite, verbose=args.verbose)
+        hashtag_analysis(tweets)
     except Exception as e:
         #print('(!) Unexpected error! {}'.format(e))
         traceback.print_exc()
